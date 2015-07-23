@@ -2,6 +2,7 @@ $(document).ready(function($){
   navigation();
   faqExpander();
   emailControl();
+  subscribeForm();
   formControl();
   // lazyloadMap();
   copyright();
@@ -99,6 +100,74 @@ function emailControl() {
   });
 }
 
+function subscribeForm() {
+  var form = $('#mc-subscribe-form');
+  var formMessages = $('.emailForm-messages p');
+  var emailInput = $('#mce-EMAIL');
+  var emailFilter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,10})+$/;
+
+  $(form).submit(function(e) {
+    e.preventDefault();
+    // store the value of the email
+    var emailText = $(emailInput).val();
+    console.log(emailText);
+    // test the email for basic validation
+    if (!emailFilter.test(emailText)) {
+      $(formMessages).text("Please enter a valid email address").toggleClass('error');
+      $(emailInput).toggleClass('error');
+      return false;
+    } else {
+      $(formMessages).text('').toggleClass('error');
+      $(emailInput).toggleClass('error');
+
+      $.ajax({
+        type: $(form).attr('method'),
+        url: $(form).attr('action'),
+        data: $(form).serialize(),
+        cache: false,
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        error: function(err) {
+          // Make sure that the formMessage div has the 'error' class
+          $(formMessages).removeClass('success');
+          $(formMessages).addClass('error');
+
+          // Set the message text
+          // if (err.responseText !== '') {
+          //   $(formMessages).text(data.responseText);
+          // } else {
+          $(formMessages).text('Oops! Could not connect to the registration server. Please subscribe again later.');
+        },
+        success: function(data) {
+          if(data.result != "success") {
+            $(formMessages).removeClass('success');
+            $(formMessages).addClass('error');
+
+            // Set the message text
+            // if (err.responseText !== '') {
+            //   $(formMessages).text(data.responseText);
+            // } else {
+            $(formMessages).text(data.msg);
+          }
+          else {
+            // Make sure that the formMessages div has the 'success' class.
+            $(formMessages).removeClass('error');
+            $(formMessages).addClass('success');
+            console.log(data);
+            // Set the message text
+            $(formMessages).text("Awesome! Thank you for subscribing. Check your inbox or spam folder now to confirm your subscription.");
+
+            // Clear the form
+            $('#name').val('');
+            $('#email').val('');
+            $('#message').val('');
+          }
+        }
+      });
+    }
+  });
+}
+
 // function to control the submission of the contact form
 //
 function formControl() {
@@ -172,7 +241,7 @@ function formControl() {
       error: function(err) {
         // Make sure that the formMessage div has the 'error' class
         $(formMessages).removeClass('success');
-        $(formMessages).removeClass('error');
+        $(formMessages).addClass('error');
 
         // Set the message text
         // if (err.responseText !== '') {
