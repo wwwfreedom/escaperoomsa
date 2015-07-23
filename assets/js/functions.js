@@ -110,7 +110,6 @@ function subscribeForm() {
     e.preventDefault();
     // store the value of the email
     var emailText = $(emailInput).val();
-    console.log(emailText);
     // test the email for basic validation
     if (!emailFilter.test(emailText)) {
       $(formMessages).text("Please enter a valid email address").toggleClass('error');
@@ -121,8 +120,9 @@ function subscribeForm() {
       $(emailInput).toggleClass('error');
 
       $.ajax({
-        type: $(form).attr('method'),
-        url: $(form).attr('action'),
+        type: "GET", // change the submit method to get to work with mailchimp
+        // change the url to add in "&c=?" at the end to work for multiple version of the domain ie. www.escaperoomsa.com.au and escaperoomsa.com.au
+        url: "//escaperoomsa.us11.list-manage.com/subscribe/post-json?u=f6de466c5adde3d308809f61b&amp;id=391ca5c5fc&c=?",
         data: $(form).serialize(),
         cache: false,
         dataType: 'json',
@@ -131,29 +131,26 @@ function subscribeForm() {
           // Make sure that the formMessage div has the 'error' class
           $(formMessages).removeClass('success');
           $(formMessages).addClass('error');
-
-          // Set the message text
-          // if (err.responseText !== '') {
-          //   $(formMessages).text(data.responseText);
-          // } else {
+          // display the error message
           $(formMessages).text('Oops! Could not connect to the registration server. Please subscribe again later.');
         },
         success: function(data) {
+          var resultMessage = data.msg || "Sorry. Unable to subscribe. Please try again later.";
           if(data.result != "success") {
             $(formMessages).removeClass('success');
             $(formMessages).addClass('error');
-
-            // Set the message text
-            // if (err.responseText !== '') {
-            //   $(formMessages).text(data.responseText);
-            // } else {
-            $(formMessages).text(data.msg);
+            // this basically check the existence of the phrase "already subscribe" and tell the user that they are subscribed already.
+            if(data.msg && data.msg.indexOf("already subscribed") >= 0) {
+              $(formMessages).text("You're already subscribed. Thank you.");
+            }
+            else {
+              $(formMessages).text(resultMessage);
+            }
           }
           else {
             // Make sure that the formMessages div has the 'success' class.
             $(formMessages).removeClass('error');
             $(formMessages).addClass('success');
-            console.log(data);
             // Set the message text
             $(formMessages).text("Awesome! Thank you for subscribing. Check your inbox or spam folder now to confirm your subscription.");
 
@@ -228,7 +225,6 @@ function formControl() {
         // Make sure that the formMessages div has the 'success' class.
         $(formMessages).removeClass('error');
         $(formMessages).addClass('success');
-        console.log(data);
         // Set the message text
         $(formMessages).text("The message is on it's way. We'll get back to you asap.");
 
